@@ -1,0 +1,184 @@
+<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"> <meta http-equiv="X-UA-Compatible" content="IE=edge"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Document</title> <link rel="stylesheet" href="./sass/style.css"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" /> </head> <body>
+  <header class="header">
+  </header>
+  
+
+  <main class="todo-container">
+    <article>
+        <section class="todo-container-header">
+            <span class="heading">TODO</span>
+            <span class="icon">
+                <i class="fa-solid fa-moon"></i>
+            </span>
+        </section>
+        <section class="todo-input-container">
+            <input type="text" placeholder="task" class="todo-input-field"id="task-field"/>
+            <button id="btn">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </section>
+        <section class="tasks-container">
+            <h1>Active Tasks</h1>
+            <div id="active-tasks" ondrop="dop2(event)" ondragover="dragover2(event)">
+               
+            </div>
+        </section>
+        <section class="tasks-container drop-container"" ondrop="drop(event)" ondragover="dragover(event)">
+            <h1>Completed Tasks</h1>
+            <div id="completed-tasks">
+
+            </div>
+            <div class="bottom-options">
+                <span id="act_count"></span>
+                <span id="comp_count"></span>
+                <span id="clear_all">Clear All</span>
+            </div>
+        </section>
+    </article>
+
+  </main>
+    
+  <script>
+    
+    var TASKS = localStorage.getItem('active-tasks') ? JSON.parse(localStorage.getItem('active-tasks')) : [];
+
+    var COM_TASKS = localStorage.getItem('completed-tasks') ? JSON.parse(localStorage.getItem('completed-tasks')) : [];
+
+    var text = "";
+    var task_id = ""; 
+
+    const btn = document.querySelector("#btn");
+    const activeTask = [];
+    const dropContainer = document.querySelector(".drop-container");
+    const act_count = document.querySelector("#act_count");
+    const comp_count = document.querySelector("#comp_count");
+
+    function loadTasks(){
+        
+        act_count.innerHTML = TASKS.length+" items active";
+        comp_count.innerHTML = COM_TASKS.length+" items completed";
+
+        const activeTasks = document.getElementById("active-tasks");
+        const completedtasks = document.getElementById("completed-tasks");
+
+        
+        let str = '';
+        let str1 = '';
+        for (let i = 0; i < TASKS.length; i++) {
+            str += `
+            <div class="task drag-item" draggable="true" id=task${i+1}>
+                <span class="task-name">${TASKS[i]}</span>
+                <span class="task-icon">
+                    <i class="fa-solid fa-check"></i>
+                </span>
+            </div>`
+        }
+
+        for(let i=0;i<COM_TASKS.length;i++){
+            str1 += `
+            <div class="task completed-item" draggable="true" id=task${i+1}>
+                <span class="task-name">${COM_TASKS[i]}</span>
+                <span class="task-icon">
+                    <i class="fa-solid fa-check"></i>
+                </span>
+            </div>`
+        }
+        activeTasks.innerHTML = str;
+        completedtasks.innerHTML = str1;
+        localStorage.setItem('active-tasks',JSON.stringify(TASKS));
+    }
+
+    loadTasks();
+
+    btn.addEventListener('click',() => {
+        const task = document.querySelector("#task-field").value;
+        TASKS.push(task);
+        console.log(TASKS);
+        loadTasks();
+        window.location.reload();
+        
+    });
+
+    let dragItem = document.querySelectorAll(".drag-item");
+    dragItem.forEach(item => {
+        item.addEventListener('dragstart',dragStart);
+        item.addEventListener('dragend',dragEnd);
+        item.addEventListener('click',() => {
+            const task = item.innerText;
+            COM_TASKS.push(task);
+            TASKS = TASKS.filter((t) => t !== task);
+            localStorage.setItem('completed-tasks',JSON.stringify(COM_TASKS));
+            localStorage.setItem('active-tasks',JSON.stringify(TASKS));
+            loadTasks();
+            window.location.reload();
+        });
+    });
+
+    let completed_item = document.querySelectorAll(".completed-item");
+    completed_item.forEach(item => {
+        item.addEventListener('dragstart',dragStart);
+        item.addEventListener('dragend',dragEnd);
+        item.addEventListener('click',() => {
+            const task = item.innerText;
+            TASKS.push(task);
+            COM_TASKS = COM_TASKS.filter((t) => t !== task);
+            localStorage.setItem('completed-tasks',JSON.stringify(COM_TASKS));
+            localStorage.setItem('active-tasks',JSON.stringify(TASKS));
+            loadTasks();
+            window.location.reload();
+        });
+    });
+
+
+    function dragStart(e){
+        task_id = e.target.id;
+        text = e.target.innerText;
+
+        // console.log(text);
+    }
+
+    
+    function dragEnd(e){
+        console.log("drag end");
+    }
+
+    function dragover(event){
+        event.preventDefault();
+    }
+    
+    function drop(event){
+        event.preventDefault();
+        const ele = document.createElement('div');
+        ele.classList.add('task');
+        ele.classList.add('completed-item');
+        ele.setAttribute('draggable','true');
+        ele.setAttribute('id',task_id);
+        ele.innerHTML = text;
+        dropContainer.appendChild(ele);
+        console.log(TASKS);
+        TASKS = TASKS.filter((task) => task !== text); console.log(TASKS); localStorage.setItem('active-tasks',JSON.stringify(TASKS)); COM_TASKS.push(text); localStorage.setItem('completed-tasks',JSON.stringify(COM_TASKS)); window.location.reload(); }
+    
+    document.getElementById("clear_all").addEventListener('click',() => {
+        localStorage.clear();
+        window.location.reload();
+    });
+
+    function dragover2(event){
+        event.preventDefault();
+    }
+
+    function drop2(event){
+        event.preventDefault();
+        COM_TASKS = COM_TASKS.filter((task) => task !== text);
+        console.log(COM_TASKS);
+        // localStorage.setItem('completed-tasks',JSON.stringify(COM_TASKS));
+        TASKS.push(text);
+        console.log(TASKS);
+        // localStorage.setItem('active-tasks',JSON.stringify(TASKS));
+        // window.location.reload();
+    }
+
+    
+  </script>
+</body>
+</html>
